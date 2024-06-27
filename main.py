@@ -48,6 +48,46 @@ def registration(csv):
     df_with_counts.to_csv('modified_file.csv', index=False)
     return 'modified_file.csv'
 
+def groups(csv):
+    df = pd.read_csv(csv)
 
+    columns_to_delete = ['Kit_Required__c', 'Late_Booking__c', 'Alternative_Guardian_Number__c', 
+                        'Primary_Guardian_Name__c', 'Primary_Guardian_Number__c', 'Gender__c', 'Kit_Type_Size__c']
+    df.drop(columns=columns_to_delete, inplace=True)
+
+    df['Date_of_Birth__c'] = pd.to_datetime(df['Date_of_Birth__c'])
+    # Sort DataFrame by 'Date_of_Birth__c' from youngest to oldest
+    df_sorted = df.sort_values(by='Date_of_Birth__c', ascending=False)
+
+    df_chunks = []
+
+    for i in range(0, len(df_sorted), 15):
+        # Get the chunk of group_size rows
+        chunk = df_sorted.iloc[i:i+15]
+
+        # Append the chunk to the list
+        df_chunks.append(chunk)
+
+        # If this is not the last chunk, append NaN rows as a gap
+        if i + 15 < len(df):
+            gap_df = pd.DataFrame(index=range(5), columns=df.columns)
+            df_chunks.append(gap_df)
+   
+    final_df = pd.concat(df_chunks, ignore_index=True)
+
+    columns_to_delete = ['Date_of_Birth__c']
+    final_df.drop(columns=columns_to_delete, inplace=True)
+
+    columns = ['Mon-SignIn', 'Signout', 'Tues-In', 'Tues-Out', 'Wed-In','Wed-Out ' ,'Thurs-In', 'Thurs-Out ','Fri-In','Fri-Out']
+
+    for col in columns:
+        final_df[col] = ''
+
+    final_csv_file = 'groups.csv'
+    final_df.to_csv(final_csv_file, index=False)
+
+    return final_csv_file
+
+groups('Lionsafc.csv')
 registration('Lionsafc.csv')
 
